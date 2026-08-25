@@ -247,22 +247,13 @@ settings:SetScript("OnShow", function()
   settings:load()
 end)
 
--- Add "Advanced Settings" Button to the Game Menu
-GameMenuFrame:SetWidth(GameMenuFrame:GetWidth() - 30)
-if GetExpansion() == 'tbc' then
-  GameMenuFrame:SetHeight(GameMenuFrame:GetHeight() + 10)
-elseif GetExpansion() == 'vanilla' then
-  GameMenuFrame:SetHeight(GameMenuFrame:GetHeight() + 6)
-end
+-- Add "tDF Options" Button to the Game Menu (after Return to Game)
+GameMenuFrame:SetHeight(GameMenuFrame:GetHeight() + 26)
 
-local advanced = CreateFrame("Button", "GameMenuButtonAdvancedOptions", GameMenuFrame, "GameMenuButtonTemplate")
-advanced:SetPoint("TOP", GameMenuButtonUIOptions, "BOTTOM", 0, -1)
-advanced:SetText(T["|cff008000t|cff1974d2DF"] .. " |cffffffffOptions" .. "|cff1974d2*")
---|cff008000Turtle |cff1974d2Dragonflight
-advanced:SetScript("OnClick", function()
+local tdfOptions = CreateFrame("Button", "GameMenuButtonTDFOptions", GameMenuFrame, "GameMenuButtonTemplate")
+tdfOptions:SetPoint("TOP", GameMenuButtonContinue, "BOTTOM", 0, -1)
+tdfOptions:SetText(T["|cff008000t|cff1974d2DF"] .. " |cffffffffOptions" .. "|cff1974d2*")
+tdfOptions:SetScript("OnClick", function()
   HideUIPanel(GameMenuFrame)
   settings:Show()
 end)
-
-GameMenuButtonKeybindings:ClearAllPoints()
-GameMenuButtonKeybindings:SetPoint("TOP", advanced, "BOTTOM", 0, -1)

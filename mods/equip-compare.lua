@@ -198,9 +198,11 @@ module.enable = function(self)
 
     if AtlasLootTooltip then
         AtlasLootTooltip.HookScript = AtlasLootTooltip.HookScript or tDFUI.HookScript
-        AtlasLootTooltip2.HookScript = AtlasLootTooltip2.HookScript or tDFUI.HookScript
         AtlasLootTooltip:HookScript("OnShow", tDF.eqcompare.GameTooltipShow)
-        AtlasLootTooltip2:HookScript("OnShow", tDF.eqcompare.GameTooltipShow)
+        if AtlasLootTooltip2 then
+            AtlasLootTooltip2.HookScript = AtlasLootTooltip2.HookScript or tDFUI.HookScript
+            AtlasLootTooltip2:HookScript("OnShow", tDF.eqcompare.GameTooltipShow)
+        end
     end
 
 end

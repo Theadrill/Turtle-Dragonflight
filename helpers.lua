@@ -77,6 +77,7 @@ tDFUI.GetExpansion = function()
 end
 
 tDFUI.HookScript = function(f, script, func)
+  if not f or not f.GetScript then return end
   local prev = f:GetScript(script)
   f:SetScript(script, function(a1,a2,a3,a4,a5,a6,a7,a8,a9)
     if prev then prev(a1,a2,a3,a4,a5,a6,a7,a8,a9) end

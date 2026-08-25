@@ -12,8 +12,10 @@ local module = tDFUI:register({
 })
 
 module.enable = function(self)
-    HookScript(UIOptionsFrame, "OnShow", function()
-        UIOptionsBlackground:Hide()
-        UIOptionsFrame:SetScale(.8)
-    end)
+    if UIOptionsFrame then
+        HookScript(UIOptionsFrame, "OnShow", function()
+            if UIOptionsBlackground then UIOptionsBlackground:Hide() end
+            UIOptionsFrame:SetScale(.8)
+        end)
+    end
 end
