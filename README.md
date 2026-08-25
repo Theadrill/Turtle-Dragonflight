@@ -5,6 +5,7 @@
 > Este repositório é um fork do [Turtle-Dragonflight original](https://github.com/TheLinuxITGuy/Turtle-Dragonflight) com correções de bugs para o cliente Turtle WoW 1.12:
 > - **Game Menu (ESC):** Reposicionamento do botão *tDF Options* para o final do menu (abaixo de *Return to Game*) e renomeação do identificador do frame para evitar sobreposição/conflito com o botão *Advanced Options* de outros addons (ex: ShaguTweaks / pfUI).
 > - **Correção de Erro em `helpers.lua`:** Adicionada verificação de segurança contra valores nulos (`nil`) em `tDFUI.HookScript`, prevenindo a falha `attempt to index local 'f' (a nil value)` ao tentar dar hook em frames opcionais ou ainda não instanciados.
+> - **Correção do Painel de Opções (Scroll):** Corrigido o cálculo de altura do `ScrollChild` e limites do `ScrollBar` em `config.lua`, restaurando o funcionamento dos botões de seta para cima/baixo, barra de rolagem e adicionando suporte a rolagem via roda do mouse. Também isolou os nomes globais dos frames com prefixo `TDF_` para prevenir conflitos com ShaguTweaks.
 
 ![GitHub Release](https://img.shields.io/github/v/release/TheLinuxITGuy/Turtle-Dragonflight?style=for-the-badge&labelColor=%231A365D&color=%23E9FC12)
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/TheLinuxITGuy/Turtle-Dragonflight/total?style=for-the-badge&labelColor=%231A365D&color=%23E9FC12)
