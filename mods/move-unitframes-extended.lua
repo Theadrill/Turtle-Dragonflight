@@ -48,6 +48,63 @@ local movables = {
   "MiniMapMailFrame",
 }
 
+local default_anchors = {
+  ["PlayerFrame"] = { "TOPLEFT", "UIParent", "TOPLEFT", -19, -4 },
+  ["TargetFrame"] = { "TOPLEFT", "UIParent", "TOPLEFT", 250, -4 },
+  ["TargetFrameToT"] = { "BOTTOMRIGHT", "TargetFrame", "BOTTOMRIGHT", -35, -10 },
+  ["PetFrame"] = { "TOPLEFT", "PlayerFrame", "TOPLEFT", 80, -60 },
+  ["PartyMemberFrame1"] = { "TOPLEFT", "UIParent", "TOPLEFT", 10, -160 },
+  ["PartyMemberFrame2"] = { "TOPLEFT", "PartyMemberFrame1", "BOTTOMLEFT", 0, -10 },
+  ["PartyMemberFrame3"] = { "TOPLEFT", "PartyMemberFrame2", "BOTTOMLEFT", 0, -10 },
+  ["PartyMemberFrame4"] = { "TOPLEFT", "PartyMemberFrame3", "BOTTOMLEFT", 0, -10 },
+  ["MyCustomMinimap"] = { "TOPRIGHT", "UIParent", "TOPRIGHT", 0, -20 },
+  ["tDFmicrobutton"] = { "BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", -10, 8 },
+  ["tDFbagMain"] = { "BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", -24, 45 },
+  ["xpbar"] = { "BOTTOM", "UIParent", "BOTTOM", 0, 10 },
+  ["CustomReputationBar"] = { "BOTTOM", "UIParent", "BOTTOM", 0, 15 },
+  ["tDFImprovedCastbar"] = { "BOTTOM", "UIParent", "BOTTOM", 0, 225 },
+  ["CastingBarFrame"] = { "BOTTOM", "UIParent", "BOTTOM", 0, 60 },
+  ["TargetCastbar"] = { "BOTTOM", "TargetFrame", "BOTTOM", 0, -15 },
+  ["MainMenuBar"] = { "BOTTOM", "UIParent", "BOTTOM", 0, 0 },
+  ["MultiBarBottomLeft"] = { "BOTTOMLEFT", "MainMenuBar", "TOPLEFT", 0, 17 },
+  ["MultiBarBottomRight"] = { "BOTTOMLEFT", "MultiBarBottomLeft", "TOPLEFT", 0, 4 },
+  ["MultiBarRight"] = { "TOPRIGHT", "UIParent", "TOPRIGHT", -7, -200 },
+  ["MultiBarLeft"] = { "TOPRIGHT", "MultiBarRight", "TOPLEFT", -5, 0 },
+  ["PetActionBarFrame"] = { "BOTTOMLEFT", "MainMenuBar", "TOPLEFT", 36, 2 },
+  ["ShapeshiftBarFrame"] = { "BOTTOMLEFT", "MainMenuBar", "TOPLEFT", 30, 0 },
+  ["tDFquestwatchframe"] = { "TOPRIGHT", "MyCustomMinimap", "BOTTOMRIGHT", -20, -50 },
+  ["QuestWatchFrame"] = { "TOPRIGHT", "UIParent", "TOPRIGHT", -10, -200 },
+  ["tDFDurability"] = { "TOPRIGHT", "MyCustomMinimap", "BOTTOMLEFT", -20, 0 },
+  ["DurabilityFrame"] = { "TOPRIGHT", "UIParent", "TOPRIGHT", -150, -200 },
+  ["BuffFrame"] = { "TOPRIGHT", "UIParent", "TOPRIGHT", -205, -13 },
+  ["MiniMapMailFrame"] = { "TOPRIGHT", "MyCustomMinimap", "BOTTOMRIGHT", 20, 0 },
+}
+
+local movedb = nil
+
+local function ResetFramePosition(frameName)
+  local f = _G[frameName]
+  if not f then return end
+
+  if movedb then
+    movedb[frameName] = nil
+  end
+
+  f:SetMovable(true)
+  f:SetUserPlaced(false)
+  f:ClearAllPoints()
+
+  local def = default_anchors[frameName]
+  if def then
+    local relTo = _G[def[2]] or UIParent
+    f:SetPoint(def[1], relTo, def[3], def[4], def[5])
+  else
+    f:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+  end
+
+  DEFAULT_CHAT_FRAME:AddMessage("|cff008000[tDF]|r " .. frameName .. " reset to default position.", 1, 1, 0)
+end
+
 local function SetupChildDrags(enable)
   -- Minimap child forwarding
   local minimapParent = _G["MyCustomMinimap"]
@@ -57,9 +114,15 @@ local function SetupChildDrags(enable)
       tMinimap:RegisterForDrag("LeftButton")
       tMinimap:SetScript("OnDragStart", function() minimapParent:StartMoving() end)
       tMinimap:SetScript("OnDragStop", function() minimapParent:StopMovingOrSizing() end)
+      tMinimap:SetScript("OnMouseUp", function()
+        if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+          ResetFramePosition("MyCustomMinimap")
+        end
+      end)
     else
       tMinimap:SetScript("OnDragStart", nil)
       tMinimap:SetScript("OnDragStop", nil)
+      tMinimap:SetScript("OnMouseUp", nil)
     end
   end
 
@@ -78,9 +141,15 @@ local function SetupChildDrags(enable)
           btn:RegisterForDrag("LeftButton")
           btn:SetScript("OnDragStart", function() microFrame:StartMoving() end)
           btn:SetScript("OnDragStop", function() microFrame:StopMovingOrSizing() end)
+          btn:SetScript("OnMouseUp", function()
+            if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+              ResetFramePosition("tDFmicrobutton")
+            end
+          end)
         else
           btn:SetScript("OnDragStart", nil)
           btn:SetScript("OnDragStop", nil)
+          btn:SetScript("OnMouseUp", nil)
         end
       end
     end
@@ -101,9 +170,15 @@ local function SetupChildDrags(enable)
           b:RegisterForDrag("LeftButton")
           b:SetScript("OnDragStart", function() bagFrame:StartMoving() end)
           b:SetScript("OnDragStop", function() bagFrame:StopMovingOrSizing() end)
+          b:SetScript("OnMouseUp", function()
+            if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+              ResetFramePosition("tDFbagMain")
+            end
+          end)
         else
           b:SetScript("OnDragStart", nil)
           b:SetScript("OnDragStop", nil)
+          b:SetScript("OnMouseUp", nil)
         end
       end
     end
@@ -119,9 +194,15 @@ local function SetupChildDrags(enable)
           bb:RegisterForDrag("LeftButton")
           bb:SetScript("OnDragStart", function() buffFrame:StartMoving() end)
           bb:SetScript("OnDragStop", function() buffFrame:StopMovingOrSizing() end)
+          bb:SetScript("OnMouseUp", function()
+            if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+              ResetFramePosition("BuffFrame")
+            end
+          end)
         else
           bb:SetScript("OnDragStart", nil)
           bb:SetScript("OnDragStop", nil)
+          bb:SetScript("OnMouseUp", nil)
         end
       end
     end
@@ -132,9 +213,15 @@ local function SetupChildDrags(enable)
           te:RegisterForDrag("LeftButton")
           te:SetScript("OnDragStart", function() buffFrame:StartMoving() end)
           te:SetScript("OnDragStop", function() buffFrame:StopMovingOrSizing() end)
+          te:SetScript("OnMouseUp", function()
+            if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+              ResetFramePosition("BuffFrame")
+            end
+          end)
         else
           te:SetScript("OnDragStart", nil)
           te:SetScript("OnDragStop", nil)
+          te:SetScript("OnMouseUp", nil)
         end
       end
     end
@@ -151,9 +238,15 @@ local function SetupChildDrags(enable)
           ab:RegisterForDrag("LeftButton")
           ab:SetScript("OnDragStart", function() mainBar:StartMoving() end)
           ab:SetScript("OnDragStop", function() mainBar:StopMovingOrSizing() end)
+          ab:SetScript("OnMouseUp", function()
+            if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+              ResetFramePosition("MainMenuBar")
+            end
+          end)
         else
           ab:SetScript("OnDragStart", nil)
           ab:SetScript("OnDragStop", nil)
+          ab:SetScript("OnMouseUp", nil)
         end
       end
       if bab then
@@ -161,9 +254,15 @@ local function SetupChildDrags(enable)
           bab:RegisterForDrag("LeftButton")
           bab:SetScript("OnDragStart", function() mainBar:StartMoving() end)
           bab:SetScript("OnDragStop", function() mainBar:StopMovingOrSizing() end)
+          bab:SetScript("OnMouseUp", function()
+            if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+              ResetFramePosition("MainMenuBar")
+            end
+          end)
         else
           bab:SetScript("OnDragStart", nil)
           bab:SetScript("OnDragStop", nil)
+          bab:SetScript("OnMouseUp", nil)
         end
       end
     end
@@ -173,7 +272,7 @@ end
 module.enable = function(self)
   tDFUI_config = tDFUI_config or {}
   tDFUI_config["MoveUnitframesExtended"] = tDFUI_config["MoveUnitframesExtended"] or {}
-  local movedb = tDFUI_config["MoveUnitframesExtended"]
+  movedb = tDFUI_config["MoveUnitframesExtended"]
 
   local function RestorePositions()
     for frameName, pos in pairs(movedb) do
@@ -205,6 +304,11 @@ module.enable = function(self)
             f:RegisterForDrag("LeftButton")
             f:SetScript("OnDragStart", function() this:StartMoving() end)
             f:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
+            f:SetScript("OnMouseUp", function()
+              if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+                ResetFramePosition(frameName)
+              end
+            end)
           end
         end
 
@@ -219,6 +323,7 @@ module.enable = function(self)
         if f then
           f:SetScript("OnDragStart", nil)
           f:SetScript("OnDragStop", nil)
+          f:SetScript("OnMouseUp", nil)
           f:StopMovingOrSizing()
 
           if f.GetLeft and f.GetTop and f:GetLeft() and f:GetTop() then
@@ -272,6 +377,26 @@ module.enable = function(self)
     end
     line:SetPoint("TOPLEFT", unlocker.grid, "TOPLEFT", 0, -(i*hStep) + (size/2))
     line:SetPoint('BOTTOMRIGHT', unlocker.grid, 'TOPRIGHT', 0, -(i*hStep + size/2))
+  end
+
+  -- Slash commands to reset
+  _G.SLASH_TDFRESET1 = "/tdfreset"
+  _G.SlashCmdList = _G.SlashCmdList or {}
+  _G.SlashCmdList["TDFRESET"] = function(msg)
+    if msg and msg ~= "" then
+      msg = string.lower(msg)
+      for frameName, _ in pairs(default_anchors) do
+        if string.find(string.lower(frameName), msg) then
+          ResetFramePosition(frameName)
+          return
+        end
+      end
+    else
+      for frameName, _ in pairs(default_anchors) do
+        ResetFramePosition(frameName)
+      end
+      DEFAULT_CHAT_FRAME:AddMessage("|cff008000[tDF]|r All frame positions have been reset to default.", 1, 1, 0)
+    end
   end
 
   -- Restore saved positions after frames are initialized
