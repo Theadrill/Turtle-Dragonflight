@@ -5,19 +5,17 @@ local mod = math.mod or mod
 
 local current_config = {}
 local max_width = 500
---local max_height = 680
 local max_height = 500
 
-local settings = CreateFrame("Frame", "AdvancedSettingsGUI", UIParent)
+local settings = CreateFrame("Frame", "TDF_AdvancedSettingsGUI", UIParent)
 settings:Hide()
 
-table.insert(UISpecialFrames, "AdvancedSettingsGUI")
+table.insert(UISpecialFrames, "TDF_AdvancedSettingsGUI")
 settings:SetScript("OnHide", function()
   ShowUIPanel(GameMenuFrame)
   UpdateMicroButtons()
 end)
 
---settings:SetPoint("TOP", UIParent, "TOP", 0, -10)
 settings:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 settings:SetWidth(max_width)
 settings:SetHeight(max_height)
@@ -29,18 +27,31 @@ settings:SetBackdrop({
   insets = { left = 11, right = 12, top = 12, bottom = 11 }
 })
 
-settings.scrollframe = CreateFrame('ScrollFrame', 'AdvancedSettingsGUIScrollframe', settings, 'UIPanelScrollFrameTemplate')
+settings.scrollframe = CreateFrame('ScrollFrame', 'TDF_AdvancedSettingsGUIScrollframe', settings, 'UIPanelScrollFrameTemplate')
 settings.scrollframe:SetHeight(max_height - 80)
 settings.scrollframe:SetWidth(max_width - 50)
 settings.scrollframe:SetPoint('CENTER', settings, -16, 15)
+settings.scrollframe:EnableMouseWheel(true)
+settings.scrollframe:SetScript("OnMouseWheel", function()
+  local scrollbar = _G[this:GetName() .. "ScrollBar"]
+  if not scrollbar then return end
+  local current = scrollbar:GetValue()
+  local minVal, maxVal = scrollbar:GetMinMaxValues()
+  local step = 25
+  if arg1 > 0 then
+    scrollbar:SetValue(math.max(minVal, current - step))
+  else
+    scrollbar:SetValue(math.min(maxVal, current + step))
+  end
+end)
 settings.scrollframe:Hide()
 
-settings.container = CreateFrame("Frame", "AdvancedSettingsGUIContainer", settings)
+settings.container = CreateFrame("Frame", "TDF_AdvancedSettingsGUIContainer", settings)
 settings.container:SetPoint("CENTER", settings, 0, 20)
 settings.container:SetHeight(max_height - 30)
 settings.container:SetWidth(max_width - 20)
 
-settings.title = CreateFrame("Frame", "AdvancedSettingsGUITtitle", settings)
+settings.title = CreateFrame("Frame", "TDF_AdvancedSettingsGUITitle", settings)
 settings.title:SetPoint("TOP", settings, "TOP", 0, 12)
 settings.title:SetWidth(256)
 settings.title:SetHeight(64)
@@ -53,7 +64,7 @@ settings.title.text = settings.title:CreateFontString(nil, "HIGH", "GameFontNorm
 settings.title.text:SetText(T["|cff008000t|cff1974d2DF"] .. " |cffffffffOptions")
 settings.title.text:SetPoint("TOP", 0, -14)
 
-settings.cancel = CreateFrame("Button", "AdvancedSettingsGUICancel", settings, "GameMenuButtonTemplate")
+settings.cancel = CreateFrame("Button", "TDF_AdvancedSettingsGUICancel", settings, "GameMenuButtonTemplate")
 settings.cancel:SetWidth(90)
 settings.cancel:SetPoint("BOTTOMRIGHT", settings, "BOTTOMRIGHT", -17, 17)
 settings.cancel:SetText(CANCEL)
@@ -62,7 +73,7 @@ settings.cancel:SetScript("OnClick", function()
   settings:Hide()
 end)
 
-settings.okay = CreateFrame("Button", "AdvancedSettingsGUIOkay", settings, "GameMenuButtonTemplate")
+settings.okay = CreateFrame("Button", "TDF_AdvancedSettingsGUIOkay", settings, "GameMenuButtonTemplate")
 settings.okay:SetWidth(90)
 settings.okay:SetPoint("RIGHT", settings.cancel, "LEFT", 0, 0)
 settings.okay:SetText(OKAY)
@@ -89,7 +100,7 @@ settings.okay:SetScript("OnClick", function()
   settings:Hide()
 end)
 
-settings.defaults = CreateFrame("Button", "AdvancedSettingsGUICancel", settings, "GameMenuButtonTemplate")
+settings.defaults = CreateFrame("Button", "TDF_AdvancedSettingsGUIDefaults", settings, "GameMenuButtonTemplate")
 settings.defaults:SetWidth(90)
 settings.defaults:SetPoint("BOTTOMLEFT", settings, "BOTTOMLEFT", 17, 17)
 settings.defaults:SetText(DEFAULTS)
@@ -168,13 +179,13 @@ settings.load = function(self)
 
     for title, module in tDFUI.spairs(entries) do
       if not settings.entries[title] then
-        settings.entries[title] = CreateFrame("CheckButton", "AdvancedSettingsGUI" .. title, settings.category[category], "OptionsCheckButtonTemplate")
+        settings.entries[title] = CreateFrame("CheckButton", "TDF_AdvancedSettingsGUI_" .. title, settings.category[category], "OptionsCheckButtonTemplate")
         settings.entries[title]:SetHeight(24)
         settings.entries[title]:SetWidth(24)
       end
 
-      local button = _G["AdvancedSettingsGUI" .. title]
-      local text = _G["AdvancedSettingsGUI" .. title .. "Text"]
+      local button = _G["TDF_AdvancedSettingsGUI_" .. title]
+      local text = _G["TDF_AdvancedSettingsGUI_" .. title .. "Text"]
 
       button.title = title
       button:SetChecked(current_config[title] == 1 and true or nil)
@@ -213,19 +224,32 @@ settings.load = function(self)
   end
 
   -- set container size to required height
-  settings.container:SetHeight(yoff)
+  settings.container:SetHeight(yoff + 20)
 
   if yoff < max_height then
     -- reduce base frame if possible
     settings:SetHeight(yoff + 60)
-  elseif yoff > max_height then
+    settings.container:SetParent(settings)
+    settings.container:ClearAllPoints()
+    settings.container:SetPoint("CENTER", settings, 0, 20)
+    settings.container:SetWidth(max_width - 20)
+    settings.scrollframe:Hide()
+  else
     -- set up scrollframe when needed
     settings.container:SetParent(settings.scrollframe)
-    settings.container:SetHeight(settings.scrollframe:GetHeight())
-    settings.container:SetWidth(settings.scrollframe:GetWidth() + 20)
+    settings.container:ClearAllPoints()
+    settings.container:SetPoint("TOPLEFT", settings.scrollframe, "TOPLEFT", 0, 0)
+    settings.container:SetHeight(yoff + 20)
+    settings.container:SetWidth(settings.scrollframe:GetWidth())
 
     settings.scrollframe:SetScrollChild(settings.container)
     settings.scrollframe:Show()
+
+    local scrollbar = _G[settings.scrollframe:GetName() .. "ScrollBar"]
+    if scrollbar then
+      local maxScroll = math.max(0, (yoff + 20) - settings.scrollframe:GetHeight())
+      scrollbar:SetMinMaxValues(0, maxScroll)
+    end
   end
 end
 
@@ -245,6 +269,12 @@ settings:SetScript("OnShow", function()
   end
 
   settings:load()
+
+  local scrollbar = _G[settings.scrollframe:GetName() .. "ScrollBar"]
+  if scrollbar then
+    scrollbar:SetValue(0)
+  end
+  settings.scrollframe:SetVerticalScroll(0)
 end)
 
 -- Add "tDF Options" Button to the Game Menu (after Return to Game)
