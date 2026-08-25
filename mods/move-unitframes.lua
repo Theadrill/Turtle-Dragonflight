@@ -21,8 +21,8 @@ module.enable = function(self)
       if not unlocker.movable then
         for _, frame in pairs(movables) do
           if _G[frame] then
-            _G[frame]:SetUserPlaced(true)
             _G[frame]:SetMovable(true)
+            _G[frame]:SetUserPlaced(true)
             _G[frame]:EnableMouse(true)
             _G[frame]:RegisterForDrag("LeftButton")
             _G[frame]:SetScript("OnDragStart", function() this:StartMoving() end)

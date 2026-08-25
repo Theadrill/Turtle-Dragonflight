@@ -179,6 +179,7 @@ module.enable = function(self)
     for frameName, pos in pairs(movedb) do
       local f = _G[frameName]
       if f and pos and pos[1] and pos[2] then
+        f:SetMovable(true)
         f:SetUserPlaced(true)
         f:ClearAllPoints()
         f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", pos[1], pos[2])
@@ -198,8 +199,8 @@ module.enable = function(self)
         for _, frameName in pairs(movables) do
           local f = _G[frameName]
           if f then
-            f:SetUserPlaced(true)
             f:SetMovable(true)
+            f:SetUserPlaced(true)
             f:EnableMouse(true)
             f:RegisterForDrag("LeftButton")
             f:SetScript("OnDragStart", function() this:StartMoving() end)
