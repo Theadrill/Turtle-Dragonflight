@@ -60,8 +60,8 @@ local default_anchors = {
   ["MyCustomMinimap"] = { "TOPRIGHT", "UIParent", "TOPRIGHT", 0, -20 },
   ["tDFmicrobutton"] = { "BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", -10, 8 },
   ["tDFbagMain"] = { "BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", -24, 45 },
-  ["xpbar"] = { "BOTTOM", "UIParent", "BOTTOM", 0, 10 },
-  ["CustomReputationBar"] = { "BOTTOM", "UIParent", "BOTTOM", 0, 15 },
+  ["xpbar"] = { "CENTER", "MainMenuExpBar", "CENTER", 0, 2 },
+  ["CustomReputationBar"] = { "CENTER", "ReputationWatchBar", "CENTER", 0, -60 },
   ["tDFImprovedCastbar"] = { "BOTTOM", "UIParent", "BOTTOM", 0, 225 },
   ["CastingBarFrame"] = { "BOTTOM", "UIParent", "BOTTOM", 0, 60 },
   ["TargetCastbar"] = { "BOTTOM", "TargetFrame", "BOTTOM", 0, -15 },
@@ -263,6 +263,56 @@ local function SetupChildDrags(enable)
           bab:SetScript("OnDragStart", nil)
           bab:SetScript("OnDragStop", nil)
           bab:SetScript("OnMouseUp", nil)
+        end
+      end
+    end
+  end
+
+  -- XP Bar forwarding
+  local xp = _G["xpbar"]
+  if xp then
+    local xpChildren = { xp, xp.leftFrame, xp.rightFrame, xp.status, xp.restedbar }
+    for _, c in pairs(xpChildren) do
+      if c and c.EnableMouse then
+        if enable then
+          c:EnableMouse(true)
+          c:RegisterForDrag("LeftButton")
+          c:SetScript("OnDragStart", function() xp:StartMoving() end)
+          c:SetScript("OnDragStop", function() xp:StopMovingOrSizing() end)
+          c:SetScript("OnMouseUp", function()
+            if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+              ResetFramePosition("xpbar")
+            end
+          end)
+        else
+          c:SetScript("OnDragStart", nil)
+          c:SetScript("OnDragStop", nil)
+          c:SetScript("OnMouseUp", nil)
+        end
+      end
+    end
+  end
+
+  -- Reputation Bar forwarding
+  local rep = _G["CustomReputationBar"] or _G["repbar"]
+  if rep then
+    local repChildren = { rep, rep.leftFrame, rep.rightFrame, rep.repStatusBar }
+    for _, c in pairs(repChildren) do
+      if c and c.EnableMouse then
+        if enable then
+          c:EnableMouse(true)
+          c:RegisterForDrag("LeftButton")
+          c:SetScript("OnDragStart", function() rep:StartMoving() end)
+          c:SetScript("OnDragStop", function() rep:StopMovingOrSizing() end)
+          c:SetScript("OnMouseUp", function()
+            if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+              ResetFramePosition("CustomReputationBar")
+            end
+          end)
+        else
+          c:SetScript("OnDragStart", nil)
+          c:SetScript("OnDragStop", nil)
+          c:SetScript("OnMouseUp", nil)
         end
       end
     end
