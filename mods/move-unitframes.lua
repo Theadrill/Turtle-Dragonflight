@@ -20,12 +20,14 @@ module.enable = function(self)
     if IsShiftKeyDown() and IsControlKeyDown() then
       if not unlocker.movable then
         for _, frame in pairs(movables) do
-         _G[frame]:SetUserPlaced(true)
-         _G[frame]:SetMovable(true)
-         _G[frame]:EnableMouse(true)
-         _G[frame]:RegisterForDrag("LeftButton")
-         _G[frame]:SetScript("OnDragStart", function() this:StartMoving() end)
-         _G[frame]:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
+          if _G[frame] then
+            _G[frame]:SetUserPlaced(true)
+            _G[frame]:SetMovable(true)
+            _G[frame]:EnableMouse(true)
+            _G[frame]:RegisterForDrag("LeftButton")
+            _G[frame]:SetScript("OnDragStart", function() this:StartMoving() end)
+            _G[frame]:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
+          end
         end
 
         unlocker.movable = true
@@ -33,9 +35,11 @@ module.enable = function(self)
       end
     elseif unlocker.movable then
       for _, frame in pairs(movables) do
-       _G[frame]:SetScript("OnDragStart", function() end)
-       _G[frame]:SetScript("OnDragStop", function() end)
-       _G[frame]:StopMovingOrSizing()
+        if _G[frame] then
+          _G[frame]:SetScript("OnDragStart", function() end)
+          _G[frame]:SetScript("OnDragStop", function() end)
+          _G[frame]:StopMovingOrSizing()
+        end
       end
 
       unlocker.movable = nil
