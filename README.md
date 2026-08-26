@@ -1,11 +1,36 @@
 # 🐢 🐉 tDF (Turtle Dragonflight)
 
 > [!NOTE]
-> **Fork Information / Fixes:**
-> Este repositório é um fork do [Turtle-Dragonflight original](https://github.com/TheLinuxITGuy/Turtle-Dragonflight) com correções de bugs para o cliente Turtle WoW 1.12:
-> - **Game Menu (ESC):** Reposicionamento do botão *tDF Options* para o final do menu (abaixo de *Return to Game*) e renomeação do identificador do frame para evitar sobreposição/conflito com o botão *Advanced Options* de outros addons (ex: ShaguTweaks / pfUI).
-> - **Correção de Erro em `helpers.lua`:** Adicionada verificação de segurança contra valores nulos (`nil`) em `tDFUI.HookScript`, prevenindo a falha `attempt to index local 'f' (a nil value)` ao tentar dar hook em frames opcionais ou ainda não instanciados.
-> - **Correção do Painel de Opções (Scroll):** Corrigido o cálculo de altura do `ScrollChild` e limites do `ScrollBar` em `config.lua`, restaurando o funcionamento dos botões de seta para cima/baixo, barra de rolagem e adicionando suporte a rolagem via roda do mouse. Também isolou os nomes globais dos frames com prefixo `TDF_` para prevenir conflitos com ShaguTweaks.
+> ### 🛠️ Informações do Fork & Lista de Modificações (Changelog)
+> Este repositório é um fork aprimorado do [Turtle-Dragonflight original (TheLinuxITGuy)](https://github.com/TheLinuxITGuy/Turtle-Dragonflight) com correções de bugs, compatibilidade e novas funcionalidades para o cliente **Turtle WoW 1.12 (Vanilla)**:
+>
+> 1. **Menu Principal (GameMenu / ESC):**
+>    - Reposicionamento do botão **tDF Options** para o final do menu principal (abaixo de *Return to Game*).
+>    - Renomeação dos identificadores de frame para evitar sobreposição/conflito com o botão *Advanced Options* de outros addons (ex: ShaguTweaks / pfUI).
+>
+> 2. **Estabilidade & Prevenção de Erros Lua:**
+>    - Adicionada verificação de segurança (`nil check`) em `tDFUI.HookScript` no arquivo `helpers.lua`, prevenindo a falha fatal `attempt to index local 'f' (a nil value)`.
+>    - Adicionadas verificações defensivas em `mods/equip-compare.lua` (para compatibilidade com `AtlasLootTooltip2`) e `mods/improved-interface-options.lua`.
+>
+> 3. **Painel de Opções (Scroll & Interface):**
+>    - Corrigido o cálculo de altura do container e limites do `ScrollBar` em `config.lua`, restaurando o funcionamento dos botões de seta para cima/baixo e da barra de rolagem.
+>    - Adicionado suporte nativo à rolagem via roda do mouse (*Mouse Wheel*) no painel de configurações.
+>    - Isolamento de nomes globais com prefixo `TDF_` para prevenir conflito com ShaguTweaks.
+>
+> 4. **Sistema de Movimentação de Elementos (`<Shift> + <Ctrl>`):**
+>    - Corrigida a falha silenciosa em `move-unitframes-extended.lua` que impedia mover a maioria dos elementos da tela (antes apenas o `PlayerFrame` movia).
+>    - Corrigida a ordem de chamada da engine do WoW 1.12 (`SetMovable(true)` antes de `SetUserPlaced(true)`), eliminando os erros `Frame ... is not movable or resizable` (ex: `MultiBarRight`, `PetFrame`).
+>    - Adicionado encaminhamento de clique/drag em elementos compostos: agora é possível clicar e arrastar em qualquer parte do Minimap, botões do MicroMenu, barra de bolsas, barra de ações, barra de XP e reputação.
+>
+> 5. **Suporte Completo a Buffs, Item Buffs e Debuffs:**
+>    - Criadas 4 âncoras dedicadas e independentes: **Buffs 1**, **Buffs 2**, **Item Buffs (Weapon Enchants / TempEnchant)** e **Debuffs**.
+>    - No modo de edição (`<Shift> + <Ctrl>`), caixas coloridas com legendas aparecem para permitir mover os grupos mesmo sem nenhum buff ativo no personagem.
+>    - Hook em `BuffFrame_Update` e `BuffButton_Update` para garantir que novos buffs permaneçam travados na posição configurada pelo usuário.
+>    - Removidas âncoras hardcoded conflitantes em `tMinimap.lua`.
+>
+> 6. **Sistema de Reset de Posições (Individual e Global):**
+>    - **Reset por Botão Direito:** No modo de edição (`<Shift> + <Ctrl>`), clique com o **Botão Direito** sobre qualquer elemento para resetá-lo imediatamente à posição de fábrica.
+>    - **Comando de Chat `/tdfreset`:** Digite `/tdfreset` para restaurar todas as posições, ou `/tdfreset <nome>` (ex: `/tdfreset player`, `/tdfreset minimap`, `/tdfreset bags`, `/tdfreset xp`) para resetar um elemento específico.
 
 ![GitHub Release](https://img.shields.io/github/v/release/TheLinuxITGuy/Turtle-Dragonflight?style=for-the-badge&labelColor=%231A365D&color=%23E9FC12)
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/TheLinuxITGuy/Turtle-Dragonflight/total?style=for-the-badge&labelColor=%231A365D&color=%23E9FC12)
