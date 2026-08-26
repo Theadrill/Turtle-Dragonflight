@@ -30,7 +30,18 @@
 >
 > 6. **Sistema de Reset de Posições (Individual e Global):**
 >    - **Reset por Botão Direito:** No modo de edição (`<Shift> + <Ctrl>`), clique com o **Botão Direito** sobre qualquer elemento para resetá-lo imediatamente à posição de fábrica.
->    - **Comando de Chat `/tdfreset`:** Digite `/tdfreset` para restaurar todas as posições, ou `/tdfreset <nome>` (ex: `/tdfreset player`, `/tdfreset minimap`, `/tdfreset bags`, `/tdfreset xp`) para resetar um elemento específico.
+>    - **Comando de Chat `/tdfreset`:** Digite `/tdfreset` para restaurar todas as posições, ou `/tdfreset <nome>` (ex: `/tdfreset player`, `/tdfreset minimap`, `/tdfreset bags`, `/tdfreset xp`, `/tdfreset cast`) para resetar um elemento específico.
+>
+> 7. **Barras de Cast Dragonflight & Preview no Modo de Edição:**
+>    - Ao segurar `<Shift> + <Ctrl>`, as barras de cast do Jogador (`tDFImprovedCastbar`) e do Alvo (`tDFTargetCastbar`) são exibidas com estilo visual completo do Dragonflight, faísca luminosa e timer, permitindo movê-las e alinhá-las sem precisar castar feitiços.
+>    - Detecção e supressão automática de barras duplicadas de outros addons (ex: `ShaguTargetCastbar` do ShaguTweaks).
+>
+> 8. **Movimentação de Barras Extras de Ação:**
+>    - Suporte a arrastar e salvar a posição das barras adicionais (`MultiBarBottomLeft`, `MultiBarBottomRight`, `MultiBarRight`, `MultiBarLeft`, `PetActionBarFrame` e `ShapeshiftBarFrame`) com propagação de clique pelos botões.
+>
+> 9. **Atalhos e Comandos de Reload Rápido:**
+>    - Criação de `Bindings.xml` para registrar nativamente o atalho de teclado `Reload UI` no menu de Key Bindings (Atalhos do Teclado) do WoW.
+>    - Registro dos comandos de chat `/rl`, `/r` e `/reload`.
 
 ![GitHub Release](https://img.shields.io/github/v/release/TheLinuxITGuy/Turtle-Dragonflight?style=for-the-badge&labelColor=%231A365D&color=%23E9FC12)
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/TheLinuxITGuy/Turtle-Dragonflight/total?style=for-the-badge&labelColor=%231A365D&color=%23E9FC12)
