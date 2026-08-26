@@ -42,6 +42,50 @@
 > 9. **Atalhos e Comandos de Reload Rápido:**
 >    - Criação de `Bindings.xml` para registrar nativamente o atalho de teclado `Reload UI` no menu de Key Bindings (Atalhos do Teclado) do WoW.
 >    - Registro dos comandos de chat `/rl`, `/r` e `/reload`.
+>
+> ---
+>
+> ### 🛠️ Fork Information & Changelog (English)
+> This repository is an enhanced fork of the original [Turtle-Dragonflight (by TheLinuxITGuy)](https://github.com/TheLinuxITGuy/Turtle-Dragonflight) featuring bug fixes, stability improvements, and new features for the **Turtle WoW (Vanilla 1.12)** client:
+>
+> 1. **Main Game Menu (ESC / GameMenu):**
+>    - Repositioned the **tDF Options** button to the bottom of the main menu (below *Return to Game*).
+>    - Renamed frame identifiers to prevent overlapping/conflicts with the *Advanced Options* button from other addons (e.g. ShaguTweaks / pfUI).
+>
+> 2. **Stability & Lua Error Prevention:**
+>    - Added safety nil checks in `tDFUI.HookScript` inside `helpers.lua`, preventing fatal `attempt to index local 'f' (a nil value)` errors.
+>    - Added defensive checks in `mods/equip-compare.lua` (for compatibility with `AtlasLootTooltip2`) and `mods/improved-interface-options.lua`.
+>
+> 3. **Options Panel (Scroll & Interface):**
+>    - Fixed container height calculation and `ScrollBar` bounds in `config.lua`, restoring arrow button navigation and draggable scrollbar behavior.
+>    - Added native Mouse Wheel scrolling support in the settings panel.
+>    - Isolated global names with `TDF_` prefixes to prevent collisions with ShaguTweaks.
+>
+> 4. **UI Movement & Edit Mode (`<Shift> + <Ctrl>`):**
+>    - Fixed silent failure in `move-unitframes-extended.lua` that previously prevented most screen elements from moving.
+>    - Fixed WoW 1.12 engine call order (`SetMovable(true)` before `SetUserPlaced(false)`), eliminating `Frame ... is not movable or resizable` errors.
+>    - Added click/drag event forwarding across composite elements: click and drag directly on Minimap, MicroMenu buttons, bags bar, action bars, XP bar, and reputation bar.
+>
+> 5. **Full Support for Buffs, Item Enchants & Debuffs:**
+>    - Created 4 dedicated, independent movable anchors: **Buffs 1**, **Buffs 2**, **Item Buffs (Weapon Enchants / TempEnchant)**, and **Debuffs**.
+>    - In edit mode (`<Shift> + <Ctrl>`), labeled preview boxes appear even when no active buffs or temporary enchants are present.
+>    - Hooked into `BuffFrame_Update` and `BuffButton_Update` to ensure newly gained buffs stay locked to the user's custom position.
+>    - Removed conflicting hardcoded minimap anchors from `tMinimap.lua`.
+>
+> 6. **Position Reset System (Individual & Global):**
+>    - **Right-Click Reset:** In edit mode (`<Shift> + <Ctrl>`), right-click any element to immediately restore its default factory position.
+>    - **Chat Slash Command `/tdfreset`:** Type `/tdfreset` to reset all positions, or `/tdfreset <name>` (e.g. `/tdfreset player`, `/tdfreset minimap`, `/tdfreset bags`, `/tdfreset xp`, `/tdfreset cast`) to reset a specific element.
+>
+> 7. **Dragonflight Castbars & Live Edit Mode Preview:**
+>    - While holding `<Shift> + <Ctrl>`, Player (`tDFImprovedCastbar`) and Target (`tDFTargetCastbar`) castbars display their authentic Dragonflight styling, spark, and timer text, allowing you to position them without casting spells.
+>    - Automatic detection and suppression of duplicate castbars from other addons (e.g. `ShaguTargetCastbar` from ShaguTweaks).
+>
+> 8. **Movable Extra Action Bars:**
+>    - Full drag, drop, and coordinate saving support for `MultiBarBottomLeft`, `MultiBarBottomRight`, `MultiBarRight`, `MultiBarLeft`, `PetActionBarFrame`, and `ShapeshiftBarFrame` with button click forwarding.
+>
+> 9. **Fast Reload Shortcuts & Slash Commands:**
+>    - Added native `Bindings.xml` registering a `Reload UI` entry in WoW's Key Bindings menu.
+>    - Registered fast `/rl`, `/r`, and `/reload` chat commands.
 
 ![GitHub Release](https://img.shields.io/github/v/release/TheLinuxITGuy/Turtle-Dragonflight?style=for-the-badge&labelColor=%231A365D&color=%23E9FC12)
 ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/TheLinuxITGuy/Turtle-Dragonflight/total?style=for-the-badge&labelColor=%231A365D&color=%23E9FC12)
