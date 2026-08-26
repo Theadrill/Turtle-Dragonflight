@@ -23,6 +23,7 @@ local movables = {
   -- Castbars
   "tDFImprovedCastbar",
   "CastingBarFrame",
+  "tDFTargetCastbar",
   "TargetCastbar",
 
   -- Action Bars
@@ -65,10 +66,11 @@ local default_anchors = {
   ["MyCustomMinimap"] = { "TOPRIGHT", "UIParent", "TOPRIGHT", 0, -20 },
   ["tDFmicrobutton"] = { "BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", -10, 8 },
   ["tDFbagMain"] = { "BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", -24, 45 },
-  ["xpbar"] = { "CENTER", "MainMenuExpBar", "CENTER", 0, 2 },
-  ["CustomReputationBar"] = { "CENTER", "ReputationWatchBar", "CENTER", 0, -60 },
+  ["xpbar"] = { "BOTTOM", "WorldFrame", "BOTTOM", 0, 2 },
+  ["CustomReputationBar"] = { "BOTTOM", "WorldFrame", "BOTTOM", 0, 15 },
   ["tDFImprovedCastbar"] = { "BOTTOM", "UIParent", "BOTTOM", 0, 225 },
   ["CastingBarFrame"] = { "BOTTOM", "UIParent", "BOTTOM", 0, 60 },
+  ["tDFTargetCastbar"] = { "BOTTOM", "TargetFrame", "BOTTOM", -12, -10 },
   ["TargetCastbar"] = { "BOTTOM", "TargetFrame", "BOTTOM", 0, -15 },
   ["MainMenuBar"] = { "BOTTOM", "UIParent", "BOTTOM", 0, 0 },
   ["MultiBarBottomLeft"] = { "BOTTOMLEFT", "MainMenuBar", "TOPLEFT", 0, 17 },
@@ -117,18 +119,40 @@ local function UpdateBuffAnchors()
 end
 
 local function ResetFramePosition(frameName)
-  local f = _G[frameName]
+  local f = _G[frameName] or (frameName == "xpbar" and _G["tDFxpbar"]) or (frameName == "tDFxpbar" and _G["xpbar"]) or (frameName == "CustomReputationBar" and _G["repbar"]) or (frameName == "repbar" and _G["CustomReputationBar"]) or (frameName == "TargetCastbar" and _G["tDFTargetCastbar"]) or (frameName == "tDFTargetCastbar" and _G["TargetCastbar"])
   if not f then return end
 
   if movedb then
     movedb[frameName] = nil
+    if frameName == "xpbar" or frameName == "tDFxpbar" then
+      movedb["xpbar"] = nil
+      movedb["tDFxpbar"] = nil
+    elseif frameName == "CustomReputationBar" or frameName == "repbar" then
+      movedb["CustomReputationBar"] = nil
+      movedb["repbar"] = nil
+    elseif frameName == "TargetCastbar" or frameName == "tDFTargetCastbar" then
+      movedb["TargetCastbar"] = nil
+      movedb["tDFTargetCastbar"] = nil
+    elseif frameName == "tDF_Buffs1" or frameName == "BuffButton0" then
+      movedb["tDF_Buffs1"] = nil
+      movedb["BuffButton0"] = nil
+    elseif frameName == "tDF_Buffs2" or frameName == "BuffButton8" then
+      movedb["tDF_Buffs2"] = nil
+      movedb["BuffButton8"] = nil
+    elseif frameName == "tDF_WeaponBuffs" or frameName == "TempEnchant1" then
+      movedb["tDF_WeaponBuffs"] = nil
+      movedb["TempEnchant1"] = nil
+    elseif frameName == "tDF_Debuffs" or frameName == "BuffButton16" then
+      movedb["tDF_Debuffs"] = nil
+      movedb["BuffButton16"] = nil
+    end
   end
 
   f:SetMovable(true)
   f:SetUserPlaced(false)
   f:ClearAllPoints()
 
-  local def = default_anchors[frameName]
+  local def = default_anchors[frameName] or default_anchors["xpbar"] or default_anchors["CustomReputationBar"] or default_anchors["tDFTargetCastbar"]
   if def then
     local relTo = _G[def[2]] or UIParent
     f:SetPoint(def[1], relTo, def[3], def[4], def[5])
@@ -191,6 +215,9 @@ local function SetupChildDrags(enable)
         anchor:SetScript("OnDragStart", function() this:StartMoving() end)
         anchor:SetScript("OnDragStop", function()
           this:StopMovingOrSizing()
+          if this:GetLeft() and this:GetTop() then
+            movedb[this:GetName()] = { this:GetLeft(), this:GetTop() }
+          end
           UpdateBuffAnchors()
         end)
         anchor:SetScript("OnMouseUp", function()
@@ -213,6 +240,48 @@ local function SetupChildDrags(enable)
     end
   end
 
+  -- Castbars preview visual mode during edit
+  local castbarNames = {
+    { name = "tDFImprovedCastbar", label = "Player Castbar" },
+    { name = "tDFTargetCastbar", label = "Target Castbar" },
+  }
+  for _, cbInfo in pairs(castbarNames) do
+    local cb = _G[cbInfo.name]
+    if cb then
+      if enable then
+        cb.isEditingPreview = true
+        cb:SetMinMaxValues(0, 100)
+        cb:SetValue(50)
+        if cb.text then
+          cb.origText = cb.text:GetText()
+          cb.text:SetText(cbInfo.label)
+          cb.text:Show()
+        end
+        if cb.timerText then
+          cb.origTimerText = cb.timerText:GetText()
+          cb.timerText:SetText("2.0s")
+          cb.timerText:Show()
+        end
+        if cb.spark then
+          local x = cb:GetWidth() * 0.5
+          cb.spark:SetPoint("CENTER", cb, "LEFT", x, 0)
+          cb.spark:Show()
+        end
+        cb:SetAlpha(1)
+        cb:Show()
+      else
+        if cb.isEditingPreview then
+          cb.isEditingPreview = nil
+          if cb.text then cb.text:SetText(cb.origText or "") end
+          if cb.timerText then cb.timerText:SetText(cb.origTimerText or "") end
+          if cb.spark then cb.spark:Hide() end
+          cb:SetValue(0)
+          cb:SetAlpha(0)
+        end
+      end
+    end
+  end
+
   -- Active Buff / Debuff buttons forwarding
   for i = 0, 7 do
     local bb = _G["BuffButton" .. i]
@@ -223,6 +292,9 @@ local function SetupChildDrags(enable)
         bb:SetScript("OnDragStart", function() anchor:StartMoving() end)
         bb:SetScript("OnDragStop", function()
           anchor:StopMovingOrSizing()
+          if anchor:GetLeft() and anchor:GetTop() then
+            movedb["tDF_Buffs1"] = { anchor:GetLeft(), anchor:GetTop() }
+          end
           UpdateBuffAnchors()
         end)
         bb:SetScript("OnMouseUp", function()
@@ -247,6 +319,9 @@ local function SetupChildDrags(enable)
         bb:SetScript("OnDragStart", function() anchor:StartMoving() end)
         bb:SetScript("OnDragStop", function()
           anchor:StopMovingOrSizing()
+          if anchor:GetLeft() and anchor:GetTop() then
+            movedb["tDF_Buffs2"] = { anchor:GetLeft(), anchor:GetTop() }
+          end
           UpdateBuffAnchors()
         end)
         bb:SetScript("OnMouseUp", function()
@@ -271,6 +346,9 @@ local function SetupChildDrags(enable)
         bb:SetScript("OnDragStart", function() anchor:StartMoving() end)
         bb:SetScript("OnDragStop", function()
           anchor:StopMovingOrSizing()
+          if anchor:GetLeft() and anchor:GetTop() then
+            movedb["tDF_Debuffs"] = { anchor:GetLeft(), anchor:GetTop() }
+          end
           UpdateBuffAnchors()
         end)
         bb:SetScript("OnMouseUp", function()
@@ -295,6 +373,9 @@ local function SetupChildDrags(enable)
         te:SetScript("OnDragStart", function() anchor:StartMoving() end)
         te:SetScript("OnDragStop", function()
           anchor:StopMovingOrSizing()
+          if anchor:GetLeft() and anchor:GetTop() then
+            movedb["tDF_WeaponBuffs"] = { anchor:GetLeft(), anchor:GetTop() }
+          end
           UpdateBuffAnchors()
         end)
         te:SetScript("OnMouseUp", function()
@@ -317,7 +398,12 @@ local function SetupChildDrags(enable)
       tMinimap:EnableMouse(true)
       tMinimap:RegisterForDrag("LeftButton")
       tMinimap:SetScript("OnDragStart", function() minimapParent:StartMoving() end)
-      tMinimap:SetScript("OnDragStop", function() minimapParent:StopMovingOrSizing() end)
+      tMinimap:SetScript("OnDragStop", function()
+        minimapParent:StopMovingOrSizing()
+        if minimapParent:GetLeft() and minimapParent:GetTop() then
+          movedb["MyCustomMinimap"] = { minimapParent:GetLeft(), minimapParent:GetTop() }
+        end
+      end)
       tMinimap:SetScript("OnMouseUp", function()
         if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
           ResetFramePosition("MyCustomMinimap")
@@ -344,7 +430,12 @@ local function SetupChildDrags(enable)
         if enable then
           btn:RegisterForDrag("LeftButton")
           btn:SetScript("OnDragStart", function() microFrame:StartMoving() end)
-          btn:SetScript("OnDragStop", function() microFrame:StopMovingOrSizing() end)
+          btn:SetScript("OnDragStop", function()
+            microFrame:StopMovingOrSizing()
+            if microFrame:GetLeft() and microFrame:GetTop() then
+              movedb["tDFmicrobutton"] = { microFrame:GetLeft(), microFrame:GetTop() }
+            end
+          end)
           btn:SetScript("OnMouseUp", function()
             if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
               ResetFramePosition("tDFmicrobutton")
@@ -373,7 +464,12 @@ local function SetupChildDrags(enable)
         if enable then
           b:RegisterForDrag("LeftButton")
           b:SetScript("OnDragStart", function() bagFrame:StartMoving() end)
-          b:SetScript("OnDragStop", function() bagFrame:StopMovingOrSizing() end)
+          b:SetScript("OnDragStop", function()
+            bagFrame:StopMovingOrSizing()
+            if bagFrame:GetLeft() and bagFrame:GetTop() then
+              movedb["tDFbagMain"] = { bagFrame:GetLeft(), bagFrame:GetTop() }
+            end
+          end)
           b:SetScript("OnMouseUp", function()
             if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
               ResetFramePosition("tDFbagMain")
@@ -398,7 +494,12 @@ local function SetupChildDrags(enable)
         if enable then
           ab:RegisterForDrag("LeftButton")
           ab:SetScript("OnDragStart", function() mainBar:StartMoving() end)
-          ab:SetScript("OnDragStop", function() mainBar:StopMovingOrSizing() end)
+          ab:SetScript("OnDragStop", function()
+            mainBar:StopMovingOrSizing()
+            if mainBar:GetLeft() and mainBar:GetTop() then
+              movedb["MainMenuBar"] = { mainBar:GetLeft(), mainBar:GetTop() }
+            end
+          end)
           ab:SetScript("OnMouseUp", function()
             if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
               ResetFramePosition("MainMenuBar")
@@ -414,7 +515,12 @@ local function SetupChildDrags(enable)
         if enable then
           bab:RegisterForDrag("LeftButton")
           bab:SetScript("OnDragStart", function() mainBar:StartMoving() end)
-          bab:SetScript("OnDragStop", function() mainBar:StopMovingOrSizing() end)
+          bab:SetScript("OnDragStop", function()
+            mainBar:StopMovingOrSizing()
+            if mainBar:GetLeft() and mainBar:GetTop() then
+              movedb["MainMenuBar"] = { mainBar:GetLeft(), mainBar:GetTop() }
+            end
+          end)
           bab:SetScript("OnMouseUp", function()
             if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
               ResetFramePosition("MainMenuBar")
@@ -429,8 +535,46 @@ local function SetupChildDrags(enable)
     end
   end
 
+  -- Extra Action Bars button forwarding (Bottom Left, Bottom Right, Right Bars, Pet, Shapeshift)
+  local function SetupBarButtons(barName, buttonPrefix, count)
+    local bar = _G[barName]
+    if bar then
+      for i = 1, count do
+        local b = _G[buttonPrefix .. i]
+        if b then
+          if enable then
+            b:RegisterForDrag("LeftButton")
+            b:SetScript("OnDragStart", function() bar:StartMoving() end)
+            b:SetScript("OnDragStop", function()
+              bar:StopMovingOrSizing()
+              if bar:GetLeft() and bar:GetTop() then
+                movedb[barName] = { bar:GetLeft(), bar:GetTop() }
+              end
+            end)
+            b:SetScript("OnMouseUp", function()
+              if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+                ResetFramePosition(barName)
+              end
+            end)
+          else
+            b:SetScript("OnDragStart", nil)
+            b:SetScript("OnDragStop", nil)
+            b:SetScript("OnMouseUp", nil)
+          end
+        end
+      end
+    end
+  end
+
+  SetupBarButtons("MultiBarBottomLeft", "MultiBarBottomLeftButton", 12)
+  SetupBarButtons("MultiBarBottomRight", "MultiBarBottomRightButton", 12)
+  SetupBarButtons("MultiBarRight", "MultiBarRightButton", 12)
+  SetupBarButtons("MultiBarLeft", "MultiBarLeftButton", 12)
+  SetupBarButtons("PetActionBarFrame", "PetActionButton", 10)
+  SetupBarButtons("ShapeshiftBarFrame", "ShapeshiftButton", 10)
+
   -- XP Bar forwarding
-  local xp = _G["xpbar"]
+  local xp = _G["xpbar"] or _G["tDFxpbar"]
   if xp then
     local xpChildren = { xp, xp.leftFrame, xp.rightFrame, xp.status, xp.restedbar }
     for _, c in pairs(xpChildren) do
@@ -439,7 +583,13 @@ local function SetupChildDrags(enable)
           c:EnableMouse(true)
           c:RegisterForDrag("LeftButton")
           c:SetScript("OnDragStart", function() xp:StartMoving() end)
-          c:SetScript("OnDragStop", function() xp:StopMovingOrSizing() end)
+          c:SetScript("OnDragStop", function()
+            xp:StopMovingOrSizing()
+            if xp:GetLeft() and xp:GetTop() then
+              movedb["xpbar"] = { xp:GetLeft(), xp:GetTop() }
+              movedb["tDFxpbar"] = nil
+            end
+          end)
           c:SetScript("OnMouseUp", function()
             if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
               ResetFramePosition("xpbar")
@@ -464,7 +614,13 @@ local function SetupChildDrags(enable)
           c:EnableMouse(true)
           c:RegisterForDrag("LeftButton")
           c:SetScript("OnDragStart", function() rep:StartMoving() end)
-          c:SetScript("OnDragStop", function() rep:StopMovingOrSizing() end)
+          c:SetScript("OnDragStop", function()
+            rep:StopMovingOrSizing()
+            if rep:GetLeft() and rep:GetTop() then
+              movedb["CustomReputationBar"] = { rep:GetLeft(), rep:GetTop() }
+              movedb["repbar"] = nil
+            end
+          end)
           c:SetScript("OnMouseUp", function()
             if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
               ResetFramePosition("CustomReputationBar")
@@ -501,15 +657,50 @@ module.enable = function(self)
   movedb = tDFUI_config["MoveUnitframesExtended"]
 
   local function RestorePositions()
+    -- Clean and migrate legacy aliases from previous versions
+    if movedb["BuffButton0"] then
+      if not movedb["tDF_Buffs1"] then movedb["tDF_Buffs1"] = movedb["BuffButton0"] end
+      movedb["BuffButton0"] = nil
+    end
+    if movedb["BuffButton8"] then
+      if not movedb["tDF_Buffs2"] then movedb["tDF_Buffs2"] = movedb["BuffButton8"] end
+      movedb["BuffButton8"] = nil
+    end
+    if movedb["TempEnchant1"] then
+      if not movedb["tDF_WeaponBuffs"] then movedb["tDF_WeaponBuffs"] = movedb["TempEnchant1"] end
+      movedb["TempEnchant1"] = nil
+    end
+    if movedb["BuffButton16"] then
+      if not movedb["tDF_Debuffs"] then movedb["tDF_Debuffs"] = movedb["BuffButton16"] end
+      movedb["BuffButton16"] = nil
+    end
+    if movedb["repbar"] then
+      if not movedb["CustomReputationBar"] then movedb["CustomReputationBar"] = movedb["repbar"] end
+      movedb["repbar"] = nil
+    end
+    if movedb["tDFxpbar"] and not movedb["xpbar"] then
+      movedb["tDFxpbar"] = nil
+    end
+
     for frameName, pos in pairs(movedb) do
-      local f = _G[frameName]
+      local f = _G[frameName] or (frameName == "xpbar" and _G["tDFxpbar"]) or (frameName == "CustomReputationBar" and _G["repbar"]) or (frameName == "TargetCastbar" and _G["tDFTargetCastbar"]) or (frameName == "tDFTargetCastbar" and _G["TargetCastbar"])
       if f and pos and pos[1] and pos[2] then
         f:SetMovable(true)
-        f:SetUserPlaced(true)
+        f:SetUserPlaced(false)
         f:ClearAllPoints()
         f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", pos[1], pos[2])
       end
     end
+
+    -- If xpbar not explicitly moved, ensure clean bottom center anchor
+    if not movedb["xpbar"] and not movedb["tDFxpbar"] then
+      local xp = _G["xpbar"] or _G["tDFxpbar"]
+      if xp then
+        xp:ClearAllPoints()
+        xp:SetPoint("BOTTOM", WorldFrame, "BOTTOM", 0, 2)
+      end
+    end
+
     UpdateBuffAnchors()
   end
 
@@ -523,20 +714,35 @@ module.enable = function(self)
         unlocker.movable = true
 
         for _, frameName in pairs(movables) do
-          local f = _G[frameName]
+          local targetName = frameName
+          local f = _G[targetName] or (targetName == "xpbar" and _G["tDFxpbar"]) or (targetName == "CustomReputationBar" and _G["repbar"]) or (targetName == "TargetCastbar" and _G["tDFTargetCastbar"]) or (targetName == "tDFTargetCastbar" and _G["TargetCastbar"])
           if f then
+            f.tDF_frameName = targetName
             f:SetMovable(true)
-            f:SetUserPlaced(true)
+            f:SetUserPlaced(false)
             f:EnableMouse(true)
             f:RegisterForDrag("LeftButton")
             f:SetScript("OnDragStart", function() this:StartMoving() end)
             f:SetScript("OnDragStop", function()
               this:StopMovingOrSizing()
+              local fn = this.tDF_frameName or this:GetName()
+              if this:GetLeft() and this:GetTop() and movedb and fn then
+                movedb[fn] = { this:GetLeft(), this:GetTop() }
+                if fn == "xpbar" or fn == "tDFxpbar" then movedb["tDFxpbar"] = nil end
+                if fn == "CustomReputationBar" or fn == "repbar" then movedb["repbar"] = nil end
+                if fn == "tDFTargetCastbar" or fn == "TargetCastbar" then
+                  movedb["TargetCastbar"] = { this:GetLeft(), this:GetTop() }
+                  movedb["tDFTargetCastbar"] = nil
+                end
+              end
               UpdateBuffAnchors()
             end)
             f:SetScript("OnMouseUp", function()
               if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
-                ResetFramePosition(frameName)
+                local fn = this.tDF_frameName or this:GetName()
+                if fn then
+                  ResetFramePosition(fn)
+                end
               end
             end)
           end
@@ -550,16 +756,12 @@ module.enable = function(self)
       unlocker.movable = nil
 
       for _, frameName in pairs(movables) do
-        local f = _G[frameName]
+        local f = _G[frameName] or (frameName == "xpbar" and _G["tDFxpbar"]) or (frameName == "CustomReputationBar" and _G["repbar"]) or (frameName == "TargetCastbar" and _G["tDFTargetCastbar"]) or (frameName == "tDFTargetCastbar" and _G["TargetCastbar"])
         if f then
           f:SetScript("OnDragStart", nil)
           f:SetScript("OnDragStop", nil)
           f:SetScript("OnMouseUp", nil)
           f:StopMovingOrSizing()
-
-          if f.GetLeft and f.GetTop and f:GetLeft() and f:GetTop() then
-            movedb[frameName] = { f:GetLeft(), f:GetTop() }
-          end
         end
       end
 
@@ -617,6 +819,17 @@ module.enable = function(self)
   _G.SlashCmdList["TDFRESET"] = function(msg)
     if msg and msg ~= "" then
       msg = string.lower(msg)
+      if msg == "xp" or msg == "xpbar" or msg == "tdfxpbar" then
+        ResetFramePosition("xpbar")
+        return
+      elseif msg == "rep" or msg == "repbar" or msg == "reputation" then
+        ResetFramePosition("CustomReputationBar")
+        return
+      elseif msg == "cast" or msg == "castbar" then
+        ResetFramePosition("tDFImprovedCastbar")
+        ResetFramePosition("tDFTargetCastbar")
+        return
+      end
       for frameName, _ in pairs(default_anchors) do
         if string.find(string.lower(frameName), msg) then
           ResetFramePosition(frameName)
@@ -627,9 +840,30 @@ module.enable = function(self)
       for frameName, _ in pairs(default_anchors) do
         ResetFramePosition(frameName)
       end
+      if movedb then
+        movedb["tDFxpbar"] = nil
+        movedb["repbar"] = nil
+        movedb["BuffButton0"] = nil
+        movedb["BuffButton8"] = nil
+        movedb["TempEnchant1"] = nil
+        movedb["BuffButton16"] = nil
+        movedb["tDFTargetCastbar"] = nil
+      end
       DEFAULT_CHAT_FRAME:AddMessage("|cff008000[tDF]|r All frame positions have been reset to default.", 1, 1, 0)
     end
   end
+
+  -- Fast Reload slash commands (/rl, /reload, /r)
+  _G.SLASH_TDFRELOAD1 = "/rl"
+  _G.SLASH_TDFRELOAD2 = "/reload"
+  _G.SLASH_TDFRELOAD3 = "/r"
+  _G.SlashCmdList["TDFRELOAD"] = function()
+    ReloadUI()
+  end
+
+  -- Key Binding definitions for Blizzard Key Bindings menu (Bindings.xml)
+  _G.BINDING_HEADER_TDF_HEADER = "Turtle-Dragonflight"
+  _G.BINDING_NAME_TDF_RELOAD = "Reload UI"
 
   -- Restore saved positions after frames are initialized
   local loader = CreateFrame("Frame")

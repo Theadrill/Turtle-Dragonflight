@@ -66,7 +66,7 @@ tDF.utils.create_castbar = function(unitstr, name, parent, anchor, x, y, w, h, f
     local UnitCastingInfo = tDFUI.UnitCastingInfo
     local UnitChannelInfo = tDFUI.UnitChannelInfo
 
-    castbar = CreateFrame("StatusBar", name, parent)
+    local castbar = CreateFrame("StatusBar", name, parent)
     castbar:SetPoint(anchor, parent, anchor, x, y)
     castbar:SetStatusBarTexture("Interface\\AddOns\\Turtle-Dragonflight\\img\\Castbar\\Timers.tga")
     castbar:SetStatusBarColor(1, .8, 0, 1)
@@ -147,6 +147,7 @@ tDF.utils.create_castbar = function(unitstr, name, parent, anchor, x, y, w, h, f
     })
 
     castbar:SetScript("OnUpdate", function()
+        if this.isEditingPreview then return end
         local channel = nil
         local name = this.unitstr and UnitName(this.unitstr) or nil
         local query = this.unitstr or nil
@@ -190,8 +191,8 @@ tDF.utils.create_castbar = function(unitstr, name, parent, anchor, x, y, w, h, f
         this.timerText:SetText(rem)
         if this.lagText then
             local _, _, lag = GetNetStats()
-            local width = castbar:GetWidth() / (duration/1000) * (lag/1000)
-            this.lag:SetWidth(math.min(castbar:GetWidth(), width))
+            local width = this:GetWidth() / (duration/1000) * (lag/1000)
+            this.lag:SetWidth(math.min(this:GetWidth(), width))
             this.lagText:SetText(lag .. "ms")
         end
 

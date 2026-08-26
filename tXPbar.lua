@@ -64,14 +64,9 @@ function xpbar_create(name)
     --local TICKER_WIDTH = 10
     --local TICKER_HEIGHT = 24
     local xpbar = CreateFrame("Frame", name, UIParent)
-    xpbar:SetWidth(XP_BAR_WIDTH*2)
-    xpbar:SetHeight(XP_BAR_HEIGHT)
-
-    --xpbar.ticker = ExhaustionTick
-    
-    xpbar:SetWidth(510)
+    xpbar:SetWidth(512)
     xpbar:SetHeight(19)
-    xpbar:SetPoint("CENTER", MainMenuExpBar, "CENTER", 0, 2) -- -588
+    xpbar:SetPoint("BOTTOM", WorldFrame, "BOTTOM", 0, 2)
 
     xpbar.leftFrame = CreateFrame("Frame", nil, xpbar)
     xpbar.leftFrame:SetWidth(XP_BAR_WIDTH)
@@ -87,7 +82,7 @@ function xpbar_create(name)
     xpbar.rightFrame:SetHeight(XP_BAR_HEIGHT)
     xpbar.rightFrame:SetPoint("RIGHT", xpbar, "RIGHT", 0, 0)
     xpbar.rightFrame:SetFrameLevel(2)
-    xpbar.rightTexture = xpbar.leftFrame:CreateTexture(nil, "BACKGROUND")
+    xpbar.rightTexture = xpbar.rightFrame:CreateTexture(nil, "BACKGROUND")
     xpbar.rightTexture:SetTexture("Interface\\AddOns\\Turtle-Dragonflight\\img\\XP\\leftFrame.tga")
     xpbar.rightTexture:SetAllPoints(xpbar.rightFrame)
     xpbar.rightTexture:SetTexCoord(1, 0, 0, 1) --flip right

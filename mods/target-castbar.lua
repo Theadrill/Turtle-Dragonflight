@@ -11,8 +11,25 @@ local module = tDFUI:register({
     enabled = true,
 })
 
+local function DisableShaguTargetCastbar()
+    if ShaguTargetCastbar then
+        ShaguTargetCastbar:UnregisterAllEvents()
+        ShaguTargetCastbar:SetScript("OnUpdate", nil)
+        ShaguTargetCastbar:Hide()
+        ShaguTargetCastbar:SetAlpha(0)
+        ShaguTargetCastbar.Show = function() end
+    end
+end
+
 module.enable = function(self)
+    DisableShaguTargetCastbar()
+
     local castbar = create_castbar("target", "tDFTargetCastbar", TargetFrame, "BOTTOM", -12, -10, 140, 10, 2)
-	-- Set the frame strata and level to ensure it's in front
-    castbar:SetFrameStrata("HIGH")  -- Set the frame strata to 'HIGH' to ensure it appears above most UI elements.
+    castbar:SetFrameStrata("HIGH")
+
+    local watcher = CreateFrame("Frame")
+    watcher:RegisterEvent("PLAYER_ENTERING_WORLD")
+    watcher:SetScript("OnEvent", function()
+        DisableShaguTargetCastbar()
+    end)
 end

@@ -130,22 +130,32 @@
 	MainMenuExpBar:ClearAllPoints()
 	MainMenuExpBar:SetPoint("BOTTOM", WorldFrame, "BOTTOM", 0, 2)
 
-	MultiBarBottomLeft:ClearAllPoints()
-	MultiBarBottomLeft:SetPoint("BOTTOM", MainMenuBar, "TOP", 3, -5)
+	if not (tDFUI_config and tDFUI_config["MoveUnitframesExtended"] and tDFUI_config["MoveUnitframesExtended"]["MultiBarBottomLeft"]) then
+		MultiBarBottomLeft:ClearAllPoints()
+		MultiBarBottomLeft:SetPoint("BOTTOM", MainMenuBar, "TOP", 3, -5)
+	end
 	ReputationWatchStatusBar:ClearAllPoints()
 	ReputationWatchStatusBar:SetPoint("BOTTOM", WorldFrame, "BOTTOM", 0, 2)
 	
+	if not (tDFUI_config and tDFUI_config["MoveUnitframesExtended"] and tDFUI_config["MoveUnitframesExtended"]["MultiBarBottomRight"]) then
+		MultiBarBottomRight:ClearAllPoints()
+		MultiBarBottomRight:SetPoint("BOTTOM", MultiBarBottomLeft, "TOP", 0, 5)
+	end
+
 -- move pet actionbar above other actionbars
-PetActionBarFrame:ClearAllPoints()
 local anchor = MainMenuBarArtFrame
 
 -- Create a function to update the anchor and position of PetActionBarFrame
 local function updatePetActionBarPosition()
+    if tDFUI_config and tDFUI_config["MoveUnitframesExtended"] and tDFUI_config["MoveUnitframesExtended"]["PetActionBarFrame"] then
+        return
+    end
     if MultiBarBottomRight:IsVisible() then
         anchor = MultiBarBottomRight
     elseif MultiBarBottomLeft:IsVisible() then
         anchor = MultiBarBottomLeft
     end
+    PetActionBarFrame:ClearAllPoints()
     PetActionBarFrame:SetPoint("BOTTOM", anchor, "TOP", 0, 3)
 end
 
@@ -160,15 +170,17 @@ MultiBarBottomLeft:SetScript("OnHide", updatePetActionBarPosition)
 
 
     -- ShapeshiftBarFrame
-    ShapeshiftBarFrame:ClearAllPoints()
-    local offset = 0
-    local anchor = MultiBarBottomLeftButton1
-    anchor = MultiBarBottomLeft:IsVisible() and MultiBarBottomLeft or anchor
-    anchor = MultiBarBottomRight:IsVisible() and MultiBarBottomRight or anchor
+    if not (tDFUI_config and tDFUI_config["MoveUnitframesExtended"] and tDFUI_config["MoveUnitframesExtended"]["ShapeshiftBarFrame"]) then
+        ShapeshiftBarFrame:ClearAllPoints()
+        local offset = 0
+        local anchor = MultiBarBottomLeftButton1
+        anchor = MultiBarBottomLeft:IsVisible() and MultiBarBottomLeft or anchor
+        anchor = MultiBarBottomRight:IsVisible() and MultiBarBottomRight or anchor
 
-    offset = anchor == ActionButton1 and ( MainMenuExpBar:IsVisible() or ReputationWatchBar:IsVisible() ) and 6 or 0
-    offset = anchor == ActionButton1 and offset + 6 or offset
-    ShapeshiftBarFrame:SetPoint("BOTTOMLEFT", anchor, "TOPLEFT", -10, 2 + offset)
+        offset = anchor == ActionButton1 and ( MainMenuExpBar:IsVisible() or ReputationWatchBar:IsVisible() ) and 6 or 0
+        offset = anchor == ActionButton1 and offset + 6 or offset
+        ShapeshiftBarFrame:SetPoint("BOTTOMLEFT", anchor, "TOPLEFT", -10, 2 + offset)
+    end
 
 -- new to support 3rd bar
 -- Create a frame
@@ -176,6 +188,14 @@ local ShapeFrame = CreateFrame("Frame")
 
 -- Set the OnUpdate script
 ShapeFrame:SetScript("OnUpdate", function(self, elapsed)
+    if tDFUI_config and tDFUI_config["MoveUnitframesExtended"] and tDFUI_config["MoveUnitframesExtended"]["ShapeshiftBarFrame"] then
+        return
+    end
+    local anchor = MultiBarBottomLeftButton1
+    anchor = MultiBarBottomLeft:IsVisible() and MultiBarBottomLeft or anchor
+    anchor = MultiBarBottomRight:IsVisible() and MultiBarBottomRight or anchor
+    local offset = anchor == ActionButton1 and ( MainMenuExpBar:IsVisible() or ReputationWatchBar:IsVisible() ) and 6 or 0
+    offset = anchor == ActionButton1 and offset + 6 or offset
     if MultiBarBottomRightButton1 then
         ShapeshiftBarFrame:SetPoint("BOTTOMLEFT", anchor, "TOPLEFT", -10, 10 + offset)
     else
