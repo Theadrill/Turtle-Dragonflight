@@ -44,8 +44,13 @@ local movables = {
   "QuestWatchFrame",
   "tDFDurability",
   "DurabilityFrame",
-  "BuffFrame",
   "MiniMapMailFrame",
+
+  -- Buff & Debuff Anchors
+  "tDF_Buffs1",
+  "tDF_Buffs2",
+  "tDF_WeaponBuffs",
+  "tDF_Debuffs",
 }
 
 local default_anchors = {
@@ -76,11 +81,40 @@ local default_anchors = {
   ["QuestWatchFrame"] = { "TOPRIGHT", "UIParent", "TOPRIGHT", -10, -200 },
   ["tDFDurability"] = { "TOPRIGHT", "MyCustomMinimap", "BOTTOMLEFT", -20, 0 },
   ["DurabilityFrame"] = { "TOPRIGHT", "UIParent", "TOPRIGHT", -150, -200 },
-  ["BuffFrame"] = { "TOPRIGHT", "UIParent", "TOPRIGHT", -205, -13 },
   ["MiniMapMailFrame"] = { "TOPRIGHT", "MyCustomMinimap", "BOTTOMRIGHT", 20, 0 },
+  ["tDF_Buffs1"] = { "TOPRIGHT", "UIParent", "TOPRIGHT", -210, -20 },
+  ["tDF_Buffs2"] = { "TOPRIGHT", "UIParent", "TOPRIGHT", -210, -60 },
+  ["tDF_WeaponBuffs"] = { "TOPRIGHT", "UIParent", "TOPRIGHT", -210, -100 },
+  ["tDF_Debuffs"] = { "TOPRIGHT", "UIParent", "TOPRIGHT", -210, -145 },
+}
+
+local buff_definitions = {
+  ["tDF_Buffs1"] = { label = "Buffs 1", r = 0, g = 0.6, b = 1 },
+  ["tDF_Buffs2"] = { label = "Buffs 2", r = 0, g = 0.6, b = 1 },
+  ["tDF_WeaponBuffs"] = { label = "Item Buffs", r = 1, g = 0.75, b = 0 },
+  ["tDF_Debuffs"] = { label = "Debuffs", r = 1, g = 0.2, b = 0.2 },
 }
 
 local movedb = nil
+
+local function UpdateBuffAnchors()
+  if BuffButton0 and _G["tDF_Buffs1"] then
+    BuffButton0:ClearAllPoints()
+    BuffButton0:SetPoint("TOPRIGHT", _G["tDF_Buffs1"], "TOPRIGHT", 0, 0)
+  end
+  if BuffButton8 and _G["tDF_Buffs2"] then
+    BuffButton8:ClearAllPoints()
+    BuffButton8:SetPoint("TOPRIGHT", _G["tDF_Buffs2"], "TOPRIGHT", 0, 0)
+  end
+  if TempEnchant1 and _G["tDF_WeaponBuffs"] then
+    TempEnchant1:ClearAllPoints()
+    TempEnchant1:SetPoint("TOPRIGHT", _G["tDF_WeaponBuffs"], "TOPRIGHT", 0, 0)
+  end
+  if BuffButton16 and _G["tDF_Debuffs"] then
+    BuffButton16:ClearAllPoints()
+    BuffButton16:SetPoint("TOPRIGHT", _G["tDF_Debuffs"], "TOPRIGHT", 0, 0)
+  end
+end
 
 local function ResetFramePosition(frameName)
   local f = _G[frameName]
@@ -102,10 +136,180 @@ local function ResetFramePosition(frameName)
     f:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
   end
 
+  UpdateBuffAnchors()
   DEFAULT_CHAT_FRAME:AddMessage("|cff008000[tDF]|r " .. frameName .. " reset to default position.", 1, 1, 0)
 end
 
+local function CreateBuffAnchors()
+  for name, info in pairs(buff_definitions) do
+    if not _G[name] then
+      local anchor = CreateFrame("Button", name, UIParent)
+      anchor:SetWidth(32)
+      anchor:SetHeight(32)
+      anchor:SetFrameStrata("MEDIUM")
+      anchor:SetMovable(true)
+      anchor:EnableMouse(false)
+
+      local def = default_anchors[name]
+      if def then
+        anchor:SetPoint(def[1], UIParent, def[3], def[4], def[5])
+      end
+
+      -- Background box when editing
+      anchor.bg = anchor:CreateTexture(nil, "BACKGROUND")
+      anchor.bg:SetAllPoints(anchor)
+      anchor.bg:SetTexture(info.r, info.g, info.b, 0.45)
+      anchor.bg:Hide()
+
+      -- Border when editing
+      anchor.border = anchor:CreateTexture(nil, "BORDER")
+      anchor.border:SetPoint("TOPLEFT", anchor, "TOPLEFT", -1, 1)
+      anchor.border:SetPoint("BOTTOMRIGHT", anchor, "BOTTOMRIGHT", 1, -1)
+      anchor.border:SetTexture(info.r, info.g, info.b, 0.9)
+      anchor.border:Hide()
+
+      -- Label when editing
+      anchor.text = anchor:CreateFontString(nil, "OVERLAY")
+      anchor.text:SetFont(STANDARD_TEXT_FONT, 9, "OUTLINE")
+      anchor.text:SetPoint("CENTER", anchor, "CENTER", 0, 0)
+      anchor.text:SetText(info.label)
+      anchor.text:SetTextColor(1, 1, 1, 1)
+      anchor.text:Hide()
+    end
+  end
+end
+
 local function SetupChildDrags(enable)
+  -- Buff anchor boxes visual mode
+  for name, _ in pairs(buff_definitions) do
+    local anchor = _G[name]
+    if anchor then
+      if enable then
+        anchor:EnableMouse(true)
+        anchor:SetMovable(true)
+        anchor:RegisterForDrag("LeftButton")
+        anchor:SetScript("OnDragStart", function() this:StartMoving() end)
+        anchor:SetScript("OnDragStop", function()
+          this:StopMovingOrSizing()
+          UpdateBuffAnchors()
+        end)
+        anchor:SetScript("OnMouseUp", function()
+          if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+            ResetFramePosition(this:GetName())
+          end
+        end)
+        if anchor.bg then anchor.bg:Show() end
+        if anchor.border then anchor.border:Show() end
+        if anchor.text then anchor.text:Show() end
+      else
+        anchor:EnableMouse(false)
+        anchor:SetScript("OnDragStart", nil)
+        anchor:SetScript("OnDragStop", nil)
+        anchor:SetScript("OnMouseUp", nil)
+        if anchor.bg then anchor.bg:Hide() end
+        if anchor.border then anchor.border:Hide() end
+        if anchor.text then anchor.text:Hide() end
+      end
+    end
+  end
+
+  -- Active Buff / Debuff buttons forwarding
+  for i = 0, 7 do
+    local bb = _G["BuffButton" .. i]
+    if bb then
+      local anchor = _G["tDF_Buffs1"]
+      if enable and anchor then
+        bb:RegisterForDrag("LeftButton")
+        bb:SetScript("OnDragStart", function() anchor:StartMoving() end)
+        bb:SetScript("OnDragStop", function()
+          anchor:StopMovingOrSizing()
+          UpdateBuffAnchors()
+        end)
+        bb:SetScript("OnMouseUp", function()
+          if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+            ResetFramePosition("tDF_Buffs1")
+          end
+        end)
+      else
+        bb:SetScript("OnDragStart", nil)
+        bb:SetScript("OnDragStop", nil)
+        bb:SetScript("OnMouseUp", nil)
+      end
+    end
+  end
+
+  for i = 8, 15 do
+    local bb = _G["BuffButton" .. i]
+    if bb then
+      local anchor = _G["tDF_Buffs2"]
+      if enable and anchor then
+        bb:RegisterForDrag("LeftButton")
+        bb:SetScript("OnDragStart", function() anchor:StartMoving() end)
+        bb:SetScript("OnDragStop", function()
+          anchor:StopMovingOrSizing()
+          UpdateBuffAnchors()
+        end)
+        bb:SetScript("OnMouseUp", function()
+          if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+            ResetFramePosition("tDF_Buffs2")
+          end
+        end)
+      else
+        bb:SetScript("OnDragStart", nil)
+        bb:SetScript("OnDragStop", nil)
+        bb:SetScript("OnMouseUp", nil)
+      end
+    end
+  end
+
+  for i = 16, 23 do
+    local bb = _G["BuffButton" .. i]
+    if bb then
+      local anchor = _G["tDF_Debuffs"]
+      if enable and anchor then
+        bb:RegisterForDrag("LeftButton")
+        bb:SetScript("OnDragStart", function() anchor:StartMoving() end)
+        bb:SetScript("OnDragStop", function()
+          anchor:StopMovingOrSizing()
+          UpdateBuffAnchors()
+        end)
+        bb:SetScript("OnMouseUp", function()
+          if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+            ResetFramePosition("tDF_Debuffs")
+          end
+        end)
+      else
+        bb:SetScript("OnDragStart", nil)
+        bb:SetScript("OnDragStop", nil)
+        bb:SetScript("OnMouseUp", nil)
+      end
+    end
+  end
+
+  for i = 1, 2 do
+    local te = _G["TempEnchant" .. i]
+    if te then
+      local anchor = _G["tDF_WeaponBuffs"]
+      if enable and anchor then
+        te:RegisterForDrag("LeftButton")
+        te:SetScript("OnDragStart", function() anchor:StartMoving() end)
+        te:SetScript("OnDragStop", function()
+          anchor:StopMovingOrSizing()
+          UpdateBuffAnchors()
+        end)
+        te:SetScript("OnMouseUp", function()
+          if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
+            ResetFramePosition("tDF_WeaponBuffs")
+          end
+        end)
+      else
+        te:SetScript("OnDragStart", nil)
+        te:SetScript("OnDragStop", nil)
+        te:SetScript("OnMouseUp", nil)
+      end
+    end
+  end
+
   -- Minimap child forwarding
   local minimapParent = _G["MyCustomMinimap"]
   if minimapParent and tMinimap then
@@ -179,49 +383,6 @@ local function SetupChildDrags(enable)
           b:SetScript("OnDragStart", nil)
           b:SetScript("OnDragStop", nil)
           b:SetScript("OnMouseUp", nil)
-        end
-      end
-    end
-  end
-
-  -- Buffs forwarding
-  local buffFrame = _G["BuffFrame"]
-  if buffFrame then
-    for i = 0, 23 do
-      local bb = _G["BuffButton" .. i]
-      if bb then
-        if enable then
-          bb:RegisterForDrag("LeftButton")
-          bb:SetScript("OnDragStart", function() buffFrame:StartMoving() end)
-          bb:SetScript("OnDragStop", function() buffFrame:StopMovingOrSizing() end)
-          bb:SetScript("OnMouseUp", function()
-            if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
-              ResetFramePosition("BuffFrame")
-            end
-          end)
-        else
-          bb:SetScript("OnDragStart", nil)
-          bb:SetScript("OnDragStop", nil)
-          bb:SetScript("OnMouseUp", nil)
-        end
-      end
-    end
-    for i = 1, 2 do
-      local te = _G["TempEnchant" .. i]
-      if te then
-        if enable then
-          te:RegisterForDrag("LeftButton")
-          te:SetScript("OnDragStart", function() buffFrame:StartMoving() end)
-          te:SetScript("OnDragStop", function() buffFrame:StopMovingOrSizing() end)
-          te:SetScript("OnMouseUp", function()
-            if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
-              ResetFramePosition("BuffFrame")
-            end
-          end)
-        else
-          te:SetScript("OnDragStart", nil)
-          te:SetScript("OnDragStop", nil)
-          te:SetScript("OnMouseUp", nil)
         end
       end
     end
@@ -320,6 +481,21 @@ local function SetupChildDrags(enable)
 end
 
 module.enable = function(self)
+  CreateBuffAnchors()
+
+  -- Hook WoW's Buff Update functions to follow our anchors
+  local orig_BuffFrame_Update = BuffFrame_Update
+  BuffFrame_Update = function()
+    if orig_BuffFrame_Update then orig_BuffFrame_Update() end
+    UpdateBuffAnchors()
+  end
+
+  local orig_BuffButton_Update = BuffButton_Update
+  BuffButton_Update = function(buttonName, index, filter)
+    if orig_BuffButton_Update then orig_BuffButton_Update(buttonName, index, filter) end
+    UpdateBuffAnchors()
+  end
+
   tDFUI_config = tDFUI_config or {}
   tDFUI_config["MoveUnitframesExtended"] = tDFUI_config["MoveUnitframesExtended"] or {}
   movedb = tDFUI_config["MoveUnitframesExtended"]
@@ -334,6 +510,7 @@ module.enable = function(self)
         f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", pos[1], pos[2])
       end
     end
+    UpdateBuffAnchors()
   end
 
   local unlocker = CreateFrame("Frame", nil, UIParent)
@@ -353,7 +530,10 @@ module.enable = function(self)
             f:EnableMouse(true)
             f:RegisterForDrag("LeftButton")
             f:SetScript("OnDragStart", function() this:StartMoving() end)
-            f:SetScript("OnDragStop", function() this:StopMovingOrSizing() end)
+            f:SetScript("OnDragStop", function()
+              this:StopMovingOrSizing()
+              UpdateBuffAnchors()
+            end)
             f:SetScript("OnMouseUp", function()
               if IsShiftKeyDown() and IsControlKeyDown() and arg1 == "RightButton" then
                 ResetFramePosition(frameName)
@@ -363,6 +543,7 @@ module.enable = function(self)
         end
 
         SetupChildDrags(true)
+        UpdateBuffAnchors()
         unlocker.grid:Show()
       end
     elseif unlocker.movable then
@@ -383,6 +564,7 @@ module.enable = function(self)
       end
 
       SetupChildDrags(false)
+      UpdateBuffAnchors()
       unlocker.grid:Hide()
     end
   end)

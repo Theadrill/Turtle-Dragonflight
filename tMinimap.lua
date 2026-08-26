@@ -237,28 +237,5 @@ QuestWatchFrame:SetFrameLevel(1)
 QuestWatchFrame.SetPoint = function() return end
 --end quest tracker
 
---Default locations for buffs
-local buff1 = getglobal("BuffButton0")
-buff1:ClearAllPoints() 
-buff1:SetPoint("TOPRIGHT", "Minimap", "TOPLEFT", -50, 0)
+-- Buff positioning handled by move-unitframes-extended.lua
 
-local buff2 = getglobal("BuffButton8")
-buff2:ClearAllPoints()
-buff2:SetPoint("TOPRIGHT", "Minimap", "TOPLEFT", -50, -15)
-
-local enchant = getglobal("TempEnchant1")
-enchant:ClearAllPoints()
-enchant:SetPoint("TOPRIGHT", "Minimap", "TOPLEFT", -50, -75)
-
-local debuff = getglobal("BuffButton16")
-debuff:ClearAllPoints()
-debuff:SetPoint("TOPRIGHT", "Minimap", "TOPLEFT", -50, -120)
-
-local frame = CreateFrame("Frame")
-frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-frame:SetScript("OnEvent", function(self, event, ...)
-    -- Clear any anchors and reassign parent if needed
-    BuffButton16:ClearAllPoints()
-    -- Set new position; adjust values (-200, -200) as you need
-    BuffButton16:SetPoint("TOPRIGHT", "Minimap", "TOPLEFT", -50, -120)
-end)
